@@ -1,4 +1,5 @@
-﻿using Ximala_UWP.ViewModel;
+﻿using Windows.UI.Xaml;
+using Ximala_UWP.ViewModel;
 
 namespace Ximala_UWP.View
 {
@@ -15,6 +16,11 @@ namespace Ximala_UWP.View
         public StreetLightStatusPage()
         {
             InitializeComponent();
+        }
+
+        private async void ConnectButton_OnClick(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

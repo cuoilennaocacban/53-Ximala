@@ -7,7 +7,9 @@ namespace Ximala_UWP.ViewModel
 {
     public class LightStatusViewModel : ObservableObject
     {
+
         private ObservableCollection<StreetLight> _streetLights;
+        private string _connectionStatus;
 
         public ObservableCollection<StreetLight> StreetLights
         {
@@ -16,6 +18,17 @@ namespace Ximala_UWP.ViewModel
             {
                 if (Equals(value, _streetLights)) return;
                 _streetLights = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ConnectionStatus
+        {
+            get { return _connectionStatus; }
+            set
+            {
+                if (value == _connectionStatus) return;
+                _connectionStatus = value;
                 OnPropertyChanged();
             }
         }
