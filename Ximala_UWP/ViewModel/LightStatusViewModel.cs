@@ -33,8 +33,14 @@ namespace Ximala_UWP.ViewModel
             }
         }
 
+        public LightStatusViewModel()
+        {
+            Initialize();
+        }
+
         public void Initialize()
         {
+            ConnectionStatus = "Not connected";
             StreetLights = new ObservableCollection<StreetLight>();
 
             for (int i = 0; i < 3; i++)

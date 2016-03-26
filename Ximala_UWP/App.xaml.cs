@@ -1,6 +1,7 @@
 ﻿using System;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.Media.Devices;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -36,7 +37,7 @@ namespace Ximala_UWP
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
             {
-                DebugSettings.EnableFrameRateCounter = true;
+                DebugSettings.EnableFrameRateCounter = false;
             }
 #endif
 
