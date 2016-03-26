@@ -6,6 +6,8 @@ using Windows.Devices.Enumeration;
 using Windows.Networking.Sockets;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
+using Microsoft.Maker.RemoteWiring;
+using Microsoft.Maker.Serial;
 using Ximala_UWP.ViewModel;
 
 namespace Ximala_UWP.View
@@ -19,9 +21,12 @@ namespace Ximala_UWP.View
         /// Gets the view's ViewModel.
         /// </summary>
         public LightStatusViewModel Vm => (LightStatusViewModel)DataContext;
-        
+
         private StreamSocket _socket;
         private StreamSocketListener _socketListener;
+
+        private UsbSerial _usbSerial;
+        private RemoteDevice _arduino;
 
         private RfcommDeviceService _service;
 
@@ -32,12 +37,17 @@ namespace Ximala_UWP.View
 
         private async void ConnectButton_OnClick(object sender, RoutedEventArgs e)
         {
+            //_usbSerial = new UsbSerial("VID_2341", "PID_0043");
+            //_arduino = new RemoteDevice(_usbSerial);
+
+            //_usbSerial.ConnectionEstablished += _usbSerial_ConnectionEstablished;
+            //_usbSerial.begin(9600, SerialConfig.SERIAL_8N1);
+
             try
             {
                 //Hello world
                 Vm.ConnectionStatus = "Connecting...";
-                var devices =
-                    await
+                var devices = await
                         DeviceInformation.FindAllAsync(RfcommDeviceService.GetDeviceSelector(RfcommServiceId.SerialPort));
 
                 var device = devices.Single(x => x.Name == "HC-05");
@@ -55,8 +65,11 @@ namespace Ximala_UWP.View
 
                 _socketListener = new StreamSocketListener();
 
-                await _socketListener.BindServiceNameAsync(_service.ServiceId.AsString());
-                _socketListener.ConnectionReceived += _socketListener_ConnectionReceived;
+                //await _socketListener.BindServiceNameAsync(_service.ServiceId.AsString());
+                //_socketListener.ConnectionReceived += _socketListener_ConnectionReceived;
+
+                Task taskReceive = Task.Run(async () => { await ListenForMessagesAsync(_socket); });
+                await taskReceive.ConfigureAwait(false);
 
                 Vm.ConnectionStatus = "Listenning";
             }
@@ -65,6 +78,54 @@ namespace Ximala_UWP.View
                 //tbError.Text = ex.Message;
                 Vm.ConnectionStatus = ex.Message;
             }
+
+
+        }
+
+        private async Task ListenForMessagesAsync(StreamSocket localsocket)
+        {
+            while (localsocket != null)
+            {
+                try
+                {
+                    string message = String.Empty;
+                    DataReader dataReader = new DataReader(localsocket.InputStream);
+                    dataReader.InputStreamOptions = InputStreamOptions.Partial;
+
+                    // Read first 4 bytes (length of the subsequent string).
+                    uint sizeFieldCount = await dataReader.LoadAsync(sizeof(uint));
+                    if (sizeFieldCount != sizeof(uint))
+                    {
+                        // The underlying socket was closed before we were able to read the whole data.
+                        return;
+                    }
+
+                    // Read the string.
+                    uint stringLength = dataReader.ReadUInt32();
+                    uint actualStringLength = await dataReader.LoadAsync(stringLength);
+                    if (stringLength != actualStringLength)
+                    {
+                        // The underlying socket was closed before we were able to read the whole data.
+                        return;
+                    }
+
+                    // Display the string on the screen. The event is invoked on a non-UI thread, so we need to marshal
+                    // the text back to the UI thread.
+                    Vm.ConnectionStatus = String.Format("Received data: \"{0}\"", dataReader.ReadString(actualStringLength));
+
+
+                }
+                catch (Exception ex)
+                {
+                    
+                }
+            }
+        }
+
+        private void _usbSerial_ConnectionEstablished()
+        {
+            Vm.ConnectionStatus = "Connected via USB";
+            _arduino.pinMode(13, PinMode.OUTPUT);
         }
 
         private async void _socketListener_ConnectionReceived(StreamSocketListener sender, StreamSocketListenerConnectionReceivedEventArgs args)
@@ -132,6 +193,7 @@ namespace Ximala_UWP.View
 
         private async void OnButton_OnClick(object sender, RoutedEventArgs e)
         {
+            //_arduino.digitalWrite(13, PinState.HIGH);
             var noOfCharsSent = await Send("a");
 
             if (noOfCharsSent != 0)
