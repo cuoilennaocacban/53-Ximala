@@ -6,6 +6,7 @@
     "Microsoft.Azure.Mobile.Client": "2.0.1",
     "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
     "MvvmLight": "5.2.0",
+    "SharpGIS.NmeaParser": "1.5.1",
     "Windows-Remote-Arduino": "1.3.0"
   },
   "frameworks": {
